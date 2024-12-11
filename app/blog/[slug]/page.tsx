@@ -5,7 +5,8 @@ type Params = {
 };
 
 export async function generateMetadata({ params }: Params) {
-  return { title: `Post: ${params.slug}` };
+  const value = await params.slug;
+  return { title: `Post: ${value}` };
 }
 
 export default function Page({ params }: Params) {
