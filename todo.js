@@ -1,0 +1,7 @@
+/*
+
+
+implement HMAC based authentication
+
+
+*/
