@@ -1,7 +1,10 @@
-export const metadata = {
-  title: "App Router",
-};
-
+import Link from 'next/link'
+ 
 export default function Page() {
-  return <h1>App Router</h1>;
+  return (
+    <div>
+      <h1>Home</h1>
+      <Link href="/about">About</Link>
+    </div>
+  )
 }
