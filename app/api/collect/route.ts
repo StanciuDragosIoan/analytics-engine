@@ -34,67 +34,47 @@ export async function GET(request: NextRequest) {
 
   export async function POST(request: NextRequest) {
     try {
-      // Parse the incoming request body (expecting JSON data)
+      // Parse request body
       const { event, timestamp, user_id, metadata } = await request.json();
   
-      // Validate the required fields
+      // Validate required fields
       if (!event || !timestamp || !user_id || !metadata?.source || !metadata?.device) {
         return new NextResponse('Missing required fields in the body', { status: 400 });
       }
   
       const { source, device } = metadata;
-
-        // Convert timestamp string to a proper Date object
-        const timestampDate = new Date(timestamp);
-        if (isNaN(timestampDate.getTime())) {
-          return new NextResponse('Invalid timestamp format', { status: 400 });
+  
+      // Convert timestamp string to a JavaScript Date object
+      const timestampDate = new Date(timestamp);
+      if (isNaN(timestampDate.getTime())) {
+        return new NextResponse('Invalid timestamp format', { status: 400 });
+      }
+  
+      // Send timestamp as a JavaScript Date object directly
+      const result = await client.querySingle(`
+        INSERT AnalyticsData {
+          event := <str>$event,
+          timestamp := <datetime>$timestamp,
+          user_id := <str>$user_id,
+          metadata := (
+            INSERT Metadata {
+              source := <str>$source,
+              device := <str>$device
+            }
+          )
         }
-    
-        // Insert event into EdgeDB
-        const result = await client.querySingle(`
-          INSERT AnalyticsData {
-            event := <str>$event,
-            timestamp := <datetime><str>$timestamp,  // Force conversion to datetime
-            user_id := <str>$user_id,
-            metadata := (
-              INSERT Metadata {
-                source := <str>$source,
-                device := <str>$device
-              }
-            )
-          }
-        `, { 
-          event, 
-          timestamp: timestampDate.toISOString(),  // Ensure proper format
-          user_id, 
-          source, 
-          device 
-        });
-        return NextResponse.json({ message: 'Event collected successfully', result });
+      `, { 
+        event, 
+        timestamp: timestampDate,  // Pass as a Date object (EdgeDB handles the conversion)
+        user_id, 
+        source, 
+        device 
+      });
+  
+      return NextResponse.json({ message: 'Event collected successfully', result });
     } catch (error) {
       console.error('Error inserting event:', error);
       return new NextResponse('Internal Server Error', { status: 500 });
     }
-} 
-// export async function POST(request: Request) {
-//     try {
-//       // Parse the incoming request body (data from the client)
-//       const { event, url, userId, timestamp } = await request.json();
-  
-//       // Query EdgeDB to insert the data into the database
-//       const result = await client.querySingle(`
-//         INSERT CollectEvent {
-//           event_name := <str>$event,
-//           url := <str>$url,
-//           user_id := <str>$userId,
-//           timestamp := <datetime>$timestamp
-//         }
-//       `, { event, url, userId, timestamp });
-  
-//       // Respond with the success message
-//       return NextResponse.json({ message: 'Event collected successfully', result });
-//     } catch (error) {
-//       console.error('Error inserting event:', error);
-//       return new NextResponse('Internal Server Error', { status: 500 });
-//     }
-//   }
+  }
+ 
