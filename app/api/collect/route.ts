@@ -43,6 +43,12 @@ export async function GET(request: NextRequest) {
       }
   
       const { source, device } = metadata;
+
+      // Convert timestamp to a valid EdgeDB datetime
+      const timestampDate = new Date(timestamp);
+      if (isNaN(timestampDate.getTime())) {
+        return new NextResponse('Invalid timestamp format', { status: 400 });
+      }
   
       // Insert the data into the database using EdgeDB
       const result = await client.querySingle(`
@@ -55,7 +61,7 @@ export async function GET(request: NextRequest) {
             device := <str>$device
           }
         }
-      `, { event, timestamp, user_id, source, device });
+      `, { event, timestamp: timestampDate.toISOString(), user_id, source, device });
   
       // Respond with the success message
       return NextResponse.json({ message: 'Event collected successfully', result });
