@@ -44,27 +44,33 @@ export async function GET(request: NextRequest) {
   
       const { source, device } = metadata;
 
-      // Convert timestamp to a valid EdgeDB datetime
-      const timestampDate = new Date(timestamp);
-      if (isNaN(timestampDate.getTime())) {
-        return new NextResponse('Invalid timestamp format', { status: 400 });
-      }
-  
-      // Insert the data into the database using EdgeDB
-      const result = await client.querySingle(`
-        INSERT AnalyticsData {
-          event := <str>$event,
-          timestamp := <str>$timestamp,
-          user_id := <str>$user_id,
-          metadata := {
-            source := <str>$source,
-            device := <str>$device
-          }
+        // Convert timestamp string to a proper Date object
+        const timestampDate = new Date(timestamp);
+        if (isNaN(timestampDate.getTime())) {
+          return new NextResponse('Invalid timestamp format', { status: 400 });
         }
-      `, { event, timestamp: timestampDate.toISOString(), user_id, source, device });
-  
-      // Respond with the success message
-      return NextResponse.json({ message: 'Event collected successfully', result });
+    
+        // Insert event into EdgeDB
+        const result = await client.querySingle(`
+          INSERT AnalyticsData {
+            event := <str>$event,
+            timestamp := <datetime><str>$timestamp,  // Force conversion to datetime
+            user_id := <str>$user_id,
+            metadata := (
+              INSERT Metadata {
+                source := <str>$source,
+                device := <str>$device
+              }
+            )
+          }
+        `, { 
+          event, 
+          timestamp: timestampDate.toISOString(),  // Ensure proper format
+          user_id, 
+          source, 
+          device 
+        });
+        return NextResponse.json({ message: 'Event collected successfully', result });
     } catch (error) {
       console.error('Error inserting event:', error);
       return new NextResponse('Internal Server Error', { status: 500 });
