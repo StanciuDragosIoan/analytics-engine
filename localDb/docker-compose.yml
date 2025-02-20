@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  edgedb:
+    image: edgedb/edgedb
+    container_name: edgedb_local
+    ports:
+      - "5656:5656"
+    volumes:
+      - edgedb_data:/var/lib/edgedb
+    environment:
+      EDGEDB_SERVER_SECURITY: dev_db
+      EDGEDB_SERVER_INSTANCE_NAME: localdb
+      EDGEDB_SERVER_DEFAULT_DATABASE: mydb
+      EDGEDB_SERVER_DEFAULT_USER: edgedb
+      EDGEDB_SERVER_DEFAULT_PASSWORD: secret
+
+volumes:
+  edgedb_data:
+
+
+# docker-compose up -d
