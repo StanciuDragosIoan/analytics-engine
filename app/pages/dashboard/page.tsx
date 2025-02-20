@@ -5,7 +5,11 @@ import client from '@/db';
  
 export default async function Dashboard() {
   
-  
+  function extractLocale(userId: string) {
+    const match = userId.match(/_[a-z]{2}-[A-Z]{2}$/);
+    return match ? match[0].slice(1) : null; // Remove the leading underscore
+}
+
   try {
   
     const data: { user_id: string; timestamp: string; metadata: { source: string; device: string } }[] = await client.query(`
@@ -18,7 +22,7 @@ export default async function Dashboard() {
               device
           }
       } 
-      FILTER .event = 'login'
+      FILTER .event = 'page_view'
   `);
 
   // Format the data into a table-like structure
@@ -34,7 +38,7 @@ export default async function Dashboard() {
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
         <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg">
           <thead>
-            <tr className="bg-gray-100 border-b">
+            <tr className="bg-blue-500 text-white border-b">
               <th className="p-2 border-r">User</th>
               <th className="p-2 border-r">Country</th>
               <th className="p-2 border-r">Device</th>
@@ -43,9 +47,9 @@ export default async function Dashboard() {
           </thead>
           <tbody>
             {formattedData.map((entry, index) => (
-              <tr key={index} className="border-b hover:bg-gray-50">
+              <tr key={index} className="border-b hover:bg-blue-100 even:bg-gray-100">
                 <td className="p-2 border-r">{entry.User}</td>
-                <td className="p-2 border-r">{entry.Country}</td>
+                <td className="p-2 border-r">{extractLocale(entry.User)}</td>
                 <td className="p-2 border-r">{entry.Device}</td>
                 <td className="p-2">{new Date(entry.Date).toLocaleString()}</td>
               </tr>

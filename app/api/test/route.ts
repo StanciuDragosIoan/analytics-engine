@@ -14,7 +14,7 @@ export async function GET() {
               device
           }
       } 
-      FILTER .event = 'login'
+      FILTER .event = 'page_view'
   `);
 
   // Format the data into a table-like structure
