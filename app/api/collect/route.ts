@@ -1,5 +1,6 @@
  
 import client from '@/db';
+import { insertAnalyticsEntry } from '@/db/crud';
 import { NextRequest, NextResponse } from 'next/server';
  
 // Connect to the EdgeDB instance using the connection string from the .env file
@@ -41,8 +42,7 @@ export async function GET(request: NextRequest) {
       if (!event || !timestamp || !user_id || !metadata?.source || !metadata?.device) {
         return new NextResponse('Missing required fields in the body', { status: 400 });
       }
-  
-      const { source, device } = metadata;
+
   
       // Convert timestamp string to a JavaScript Date object
       const timestampDate = new Date(timestamp);
@@ -51,25 +51,14 @@ export async function GET(request: NextRequest) {
       }
   
       // Send timestamp as a JavaScript Date object directly
-      const result = await client.querySingle(`
-        INSERT AnalyticsData {
-          event := <str>$event,
-          timestamp := <datetime>$timestamp,
-          user_id := <str>$user_id,
-          metadata := (
-            INSERT Metadata {
-              source := <str>$source,
-              device := <str>$device
-            }
-          )
-        }
-      `, { 
-        event, 
-        timestamp: timestampDate,  // Pass as a Date object (EdgeDB handles the conversion)
-        user_id, 
-        source, 
-        device 
+      const result = await insertAnalyticsEntry({
+        event,
+        timestamp,
+        user_id,
+        metadata
       });
+
+      console.log("result here", JSON.stringify(result));
   
       return NextResponse.json({ message: 'Event collected successfully', result });
     } catch (error) {
