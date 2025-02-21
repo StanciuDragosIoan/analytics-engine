@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+
 import client from '.';
 
 
-type AnalyticsEntry = {
+export type AnalyticsEntry = {
     event: string;
     timestamp: string;
     user_id: string;
     metadata: AnalyticsMetaData
 };
 
-type AnalyticsMetaData = {
+export type AnalyticsMetaData = {
     source: string;
     device: string;
 }

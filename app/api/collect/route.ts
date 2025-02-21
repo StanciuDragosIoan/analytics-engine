@@ -1,5 +1,5 @@
  
-import client from '@/db';
+ 
 import { insertAnalyticsEntry } from '@/db/crud';
 import { NextRequest, NextResponse } from 'next/server';
  
